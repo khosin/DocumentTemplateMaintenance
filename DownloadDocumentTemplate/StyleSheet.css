@@ -1,0 +1,94 @@
+﻿td.tdmember {
+    word-wrap: break-word;
+    border: 1px solid #D6D6D6;
+    border-collapse: collapse;
+}
+
+tr.trmember th.thmember {
+    text-align: left;
+    font-weight: normal;
+}
+
+tr.trmember2 td.tdmember {
+    border-right-style: hidden;
+}
+
+    tr.trmember2 td.tdmember:last-child {
+        border-right-style: solid;
+    }
+
+tr.trmember2 {
+    border: 1px solid #D6D6D6;
+}
+
+span.spantable {
+    display: block;
+    border-right: 1px solid #D6D6D6;
+}
+
+th.thmember:hover, tr.trmember2:hover {
+    background-color: #D7EBF9;
+}
+
+th.thmember, td.tdmember {
+    padding: 5px;
+    cursor: pointer;
+    padding-left: 10px;
+}
+
+h3.tabhead, h3.tabheadd {
+    color: #1160B7;
+    font-family: Segoe UI, Tahoma, Arial;
+    font-weight: 400;
+}
+
+    h3.tabhead:nth-child(1) {
+        display: none;
+    }
+
+table.closedAuunt {
+    color: #444444;
+    width: 50%;
+    font-size: 12px;
+    font-family: Segoe\000020UI,Tahoma,Arial;
+    margin: 30px;
+    table-layout: fixed;
+}
+
+table.Tabledet {
+    width: 100%;
+    font-size: 12px;
+    font-family: Segoe\000020UI,Tahoma,Arial;
+}
+
+td.tdclosedAuunt {
+    padding: 5px;
+    margin-left: 10px;
+    padding-left: 10px;
+}
+
+h3.hhead {
+    margin-left: 30px;
+    padding-left: 10px;
+    font-family: Segoe UI, Tahoma, Arial;
+    font-weight: 500;
+}
+
+td.tdclosedAuunt:hover {
+    background-color: #D7EBF9;
+}
+
+table.dttable {
+    color: #444444;
+    font-size: 12px;
+    font-family: Segoe\000020UI,Tahoma,Arial;
+    border: 1px solid #D6D6D6;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+label, input, button {
+    color: #444444;
+    font-size: 12px;
+    font-family: Segoe\000020UI,Tahoma,Arial;
+}

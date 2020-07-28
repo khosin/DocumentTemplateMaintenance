@@ -1,0 +1,242 @@
+﻿<html>
+<head>
+    <title>Download Document Template</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=11">
+    <link href="../DownloadDocumentTemplate/StyleSheet.css" rel="stylesheet">
+    <script src="../../ClientGlobalContext.js.aspx" type="text/javascript"></script>
+    <script src="../DownloadDocumentTemplate/knockout_3.4.0.min.js"></script>
+    <script src="../DownloadDocumentTemplate/jquery_2.1.1.min.js"></script>
+    <script src="../DownloadDocumentTemplate/FileSaver.js"></script>
+    <meta>
+
+</head>
+<body onfocusout="parent.setEmailRange();">
+
+    <div class="Templates" style="font-family: undefined;">
+        <div>Document Template</div>
+        <div>
+            <div style="padding: 5px;">
+                <label class="thmember">Filter By Name: </label>
+                <input class="thmember" id="txt_filterbyname" type="textbox">
+                <button class="thmember" id="btn_search" onclick="refreshGrid();">Search</button>
+            </div>
+            <div style="padding: 5px;">
+                <label class="thmember">Only Top 50 Records will be shown.</label>
+            </div>
+            <div style="padding: 5px;">
+                <table class="dttable">
+                    <tbody>
+                        <tr class="trmember">
+                            <th class="thmember"><span class="spantable">Name</span></th>
+                            <th class="thmember"><span class="spantable">DocumentType</span></th>
+                            <th class="thmember"><span class="spantable">AssociatedEntityTypeCode</span></th>
+                            <th class="thmember">  </th>
+                            <th class="thmember">  </th>
+                        </tr>
+                    </tbody>
+                    <tbody data-bind="foreach:Templates">
+                        <tr class="trmember2">
+                            <td class="tdmember"><a class="Fname" href="" data-bind="text: name, click: $parent.openDocumentTemplateRecord"></a> </td>
+                            <td class="tdmember"><span class="Fname" data-bind="text: $data['documenttype@OData.Community.Display.V1.FormattedValue']" href=""></span></td>
+                            <td class="tdmember"><span class="Fname" data-bind="text: $data['associatedentitytypecode@OData.Community.Display.V1.FormattedValue']" href=""></span></td>
+                            <td class="tdmember">
+                                <a class="Fname" href="" data-bind="click: $parent.downloadDocumentTemplates">Download</a>
+                            </td>
+                            <td class="tdmember">
+                                <input type="file" data-bind=" attr: { id: 'fileup_' + documenttemplateid }, event: { change: function() { $parent.updateDocumentTemplates(this, $element.files[0] ) } }">
+                                <span class="Fname" style="display: none;" data-bind=" attr: { id: 'spanfileup_' + documenttemplateid }">Uploading...</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>if (typeof (parent) === "undefined") {
+			if (typeof (this.parent) === "undefined") {
+				this.parent = {};
+			}
+			parent = this.parent;
+		}
+		if (typeof (parent.setEmailRange) === "undefined")
+		{ parent.setEmailRange = function() {}; }
+
+		if (typeof (Ext) === "undefined") {
+			if (typeof (this.Ext) === "undefined") {
+				this.Ext = {};
+			}
+			Ext = this.Ext;
+		}
+
+		if (typeof (Ext.DTDownload) === "undefined")
+		{ Ext.DTDownload = {}; }
+
+		if (typeof ($) == "undefined")
+		{ this.$ = parent.$; }
+
+		var entityId = "";
+		var gridId = "";
+
+		Ext.DTDownload = {
+			webApiUrlPrefix: Xrm.Page.context.getClientUrl()+"/api/data/v8.1/",
+			DTDownloadViewModel: {
+				downloadDocumentTemplates: function (object) {
+					var entitytype = "documenttemplates";
+					var query = "?$select=name,content,documenttype&$filter=documenttemplateid eq "+object.documenttemplateid;
+
+					var req = Ext.DTDownload.xmlHttpRequestGetHandler(entitytype, query,
+						function (response){
+							if (response != null)
+							{
+								var data = response.value;
+								if (data != null && data.length > 0) {
+									var counter = data.length;
+									for (var i = 0; i < counter; i++) {
+										var mimetype = (data[i].documenttype == 2) ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+										var filetype = (data[i].documenttype == 2) ? ".docx" : ".xlsx";
+										var filename = data[i].name + filetype;
+										var byteCharacters = window.atob(data[i].content);
+										var byteNumbers = new Array(byteCharacters.length);
+										for (let i = 0; i < byteCharacters.length; i++) {
+											byteNumbers[i] = byteCharacters.charCodeAt(i);
+										}
+										var byteArray = new Uint8Array(byteNumbers);
+										saveAs(new Blob([byteArray], {type: mimetype}),filename);
+									}
+								}
+							}
+						},
+						function (error){
+							alert(error.error.message);
+						}
+					);
+				},
+				updateDocumentTemplates: function (object, data) {
+					Ext.DTDownload.hideUploadControl(object.documenttemplateid);
+					var fileReader = new FileReader();
+					fileReader.onloadend = function (e) {
+						if (confirm("Please make sure you have a backup of the File. Are you sure to update the File?"))
+						{
+							var result = e.target.result;
+							var binary = '';
+							var bytes = new Uint8Array( result );
+							var len = bytes.byteLength;
+							for (var i = 0; i < len; i++) {
+								binary += String.fromCharCode( bytes[ i ] );
+							}
+							var bse64str = window.btoa(binary);
+							//alert(bse64str);
+							var entitytype = "documenttemplates("+object.documenttemplateid+")";
+							var body = JSON.stringify({
+								"content": bse64str,
+							});
+							var req = Ext.DTDownload.xmlHttpRequestPatchHandler(entitytype,
+								body,
+								function (data){
+									alert("File Updated");
+									Ext.DTDownload.showUploadControl(object.documenttemplateid);
+								},
+								function (error){
+									alert("Error Updating File");
+									Ext.DTDownload.showUploadControl(object.documenttemplateid);
+
+								}
+							);
+						}
+						else
+						{
+							Ext.DTDownload.showUploadControl(object.documenttemplateid);
+						}
+					};
+					if (((object.documenttype == 2) && data.name.endsWith(".docx"))
+						|| ((object.documenttype == 1) && data.name.endsWith(".xlsx"))) {
+						fileReader.readAsArrayBuffer(data);
+					}
+					else
+					{
+						alert("Unexpected File Extension for this document type.");
+						Ext.DTDownload.showUploadControl(object.documenttemplateid);
+					}
+					//object.documenttype
+					//object.data.name
+
+				},
+				openDocumentTemplateRecord: function (object) {
+					window.open("../../../main.aspx?etn=documenttemplate&pagetype=entityrecord&id=%7B"+object.documenttemplateid+"%7D");
+				},
+			},
+			retrieveDocumentTemplates: function () {
+				var entitytype = "documenttemplates";
+				var query = "?$select=name,documenttype,documenttemplateid,associatedentitytypecode,clientdata";
+				if  ($("#txt_filterbyname").val() != null)
+					query = query + "&$filter=contains(name,'"+$("#txt_filterbyname").val()+"')";
+				query = query + "&$top=50&$orderby=name asc"
+				var req = Ext.DTDownload.xmlHttpRequestGetHandler(entitytype, query,
+					function (response){
+						var data = response.value;
+						if (data != null && data.length > 0) {
+							var counter = data.length;
+							for (var i = 0; i < counter; i++) {
+								Ext.DTDownload.DTDownloadViewModel.Templates.push(data[i]);
+							}
+						}
+					},
+					function (error){alert(error.error.message);}
+				);
+			},
+			clearDocumentTemplates: function () {
+				Ext.DTDownload.DTDownloadViewModel.Templates.removeAll();
+			},
+			xmlHttpRequestGetHandler: function (entitytype, query, successCallback, errorCallback) {
+				Ext.DTDownload.xmlHttpRequestHandler("GET", entitytype, query, null, successCallback, errorCallback);
+			},
+			xmlHttpRequestPatchHandler: function (entitytype, body, successCallback, errorCallback) {
+				Ext.DTDownload.xmlHttpRequestHandler("PATCH", entitytype, "", body, successCallback, errorCallback);
+			},
+			xmlHttpRequestHandler: function (webMethod, entitytype, query, body, successCallback, errorCallback ) {
+				var req = new XMLHttpRequest();
+				var webApiUrl = Ext.DTDownload.webApiUrlPrefix+entitytype+query;
+				req.open(webMethod, encodeURI(webApiUrl), true);
+				req.setRequestHeader("Accept", "application/json");
+				req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+				req.setRequestHeader("OData-MaxVersion", "4.0");
+				req.setRequestHeader("OData-Version", "4.0");
+				req.setRequestHeader("Prefer", "odata.include-annotations=*");
+				req.onreadystatechange = function () {
+					if (this.readyState == 4) {
+						req.onreadystatechange = null;
+						if (this.status == 200) {
+							successCallback(JSON.parse(this.response));
+						} else if (this.status == 204) {
+							successCallback();
+						} else {
+							errorCallback(JSON.parse(this.response));
+						}
+					}
+				};
+				if (body != null)
+					req.send(body);
+				else
+					req.send();
+			},
+			hideUploadControl: function(documenttemplateid){
+				$("#fileup_"+documenttemplateid).hide();
+				$("#spanfileup_"+documenttemplateid).show();
+			},
+			showUploadControl: function(documenttemplateid){
+				$("#fileup_"+documenttemplateid).val('');
+				$("#fileup_"+documenttemplateid).show();
+				$("#spanfileup_"+documenttemplateid).hide();
+			},
+		};
+		Ext.DTDownload.DTDownloadViewModel.Templates = ko.observableArray([]);
+		ko.applyBindings(Ext.DTDownload.DTDownloadViewModel);
+		refreshGrid();
+		function refreshGrid()
+		{
+			Ext.DTDownload.clearDocumentTemplates();
+			Ext.DTDownload.retrieveDocumentTemplates();
+		}</script>
+</body>
+</html>
